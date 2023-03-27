@@ -16,7 +16,7 @@ Only the last validated jump will be animated. The min tracking distance is 230 
 	- Download and install movementapi: https://github.com/danzayau/MovementAPI
 	- Download the latest  release.
 	- Extract the .smx file into your server's  `csgo/addons/sourcemod/plugins`  directory.
-	- Open  `csgo/addons/sourcemod/configs/databases.cfg`  in a text editor and add the following lines before the last "}":
+	- Open  `csgo/addons/sourcemod/configs/databases.cfg`  in a text editor and add the following lines before the last  `}` :
 	> "lj_animation"\
 		{\
 			"driver"  "sqlite"\
