@@ -23,5 +23,10 @@ Only the last validated jump will be animated. The min tracking distance is 230 
 			"database"  "lj_animation-sqlite"\
 		}
 
+3. Commands:
+	-  `sm_lja` 		toggle on/off
+	-  `sm_ljamenu` 	open menu
+
+
 Please let me know if something is broken! Thanks :sparkling_heart:
 
