@@ -12,7 +12,7 @@ Credits for the idea: https://kz-rush.ru/en/article/longjump-physics
 
 2. Setup:
 	- Download the latest  release.
-	- Extract the files into your server's  `csgo/addons/sourcemod/plugins`  directory.
+	- Extract the .smx file into your server's  `csgo/addons/sourcemod/plugins`  directory.
 	- Open  `csgo/addons/sourcemod/configs/databases.cfg`  in a text editor and add the following lines before the last "}":
 	> "lj_animation"
 		{
