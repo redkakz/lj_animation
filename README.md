@@ -6,7 +6,7 @@ Credits for the idea: https://kz-rush.ru/en/article/longjump-physics
 1. Features:
 	- playable in-game longjump animation
 	- shows prestrafe ticks
-	- visible for everyone on the server
+	- visible for everyone on the server, so you can teach others more easily
 
 ![alt text](https://github.com/redkakz/lj_animation/blob/main/ljanim_thumbnail.jpg?raw=true)
 
