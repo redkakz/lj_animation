@@ -10,7 +10,7 @@ Credits for the idea: https://kz-rush.ru/en/article/longjump-physics
 
 ![alt text](https://github.com/redkakz/lj_animation/blob/main/ljanim_thumbnail.jpg?raw=true)
 
-Only the last validated jump will be animated. The min tracking distance is 230 and the jump has to have at least 10 ticks on the ground before jump. Offset between takeoff and landing, noclipping, teleporting, hitting the wall, being in water, having more than 277 prespeed will invalidate the jump.
+Only the last validated jump will be animated. The min tracking distance is 230 and the jump has to have at least 10 ticks on the ground before jump. Offset between takeoff and landing, noclipping, teleporting, being in water, having more than 277 prespeed will invalidate the jump.
 
 2. Setup:
 	- Download and install movementapi: https://github.com/danzayau/MovementAPI
