@@ -1,6 +1,6 @@
 # lj_animation - csgo server plugin
 CSGO GOKZ in-game animation for longjumps.\
-Credits: https://kz-rush.ru/en/article/longjump-physics
+Credits for the idea: https://kz-rush.ru/en/article/longjump-physics
 -
 
 1. Features:
