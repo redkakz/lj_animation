@@ -1,5 +1,5 @@
 #define LJA_SOURCE_URL						"https://github.com/redkakz/lj_animation"
-#define LJA_VERSION							"1.0"
+#define LJA_VERSION							"1.1"
 
 #define PI									3.14159
 #define MIN_TRACKING_DISTANCE 				230.0

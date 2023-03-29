@@ -1,8 +1,4 @@
-int gI_AitTickCount[MAXPLAYERS + 1];
-
-#include "lj_animation/stateconditions.sp"
-
-state StateTransition(int client, state prevState)
+state StateTransition(int client)
 {
 	if(IsPlayerTeleported(client))
 	{
@@ -10,7 +6,7 @@ state StateTransition(int client, state prevState)
 	}
 	if(!IsPlayerMovetypeValid(client) || IsPlayerInWater(client))
 	{
-		if(WasPlayerPrevStateValid(prevState))
+		if(WasPlayerPrevStateValid(client))
 		{
 			return INVALID;
 		}
@@ -19,9 +15,9 @@ state StateTransition(int client, state prevState)
 			return DEFAULT;
 		}
 	}
-	if (IsPlayerOnGround(client))
+	if(IsPlayerOnGround(client))
 	{
-		if(WasPlayerInAir(prevState))
+		if(WasPlayerInAir(client))
 		{
 			return LANDED;
 		}
@@ -32,9 +28,9 @@ state StateTransition(int client, state prevState)
 	}
 	else
 	{
-		if(IsAirMaxTickCountReached(client) || !WasPlayerPrevStateValidForAirState(prevState))
+		if(IsAirMaxTickCountReached(client) || !WasPlayerPrevStateValidForAirState(client))
 		{
-			if(WasPlayerPrevStateValid(prevState))
+			if(WasPlayerPrevStateValid(client))
 			{
 				return INVALID;
 			}

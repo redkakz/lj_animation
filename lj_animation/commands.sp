@@ -1,5 +1,3 @@
-#include "lj_animation/animation.sp"
-
 void RegisterCommands()
 {
 	RegConsoleCmd("sm_lja", CommandToggleAnimation, "[LJA]: Toggle jump animation.");

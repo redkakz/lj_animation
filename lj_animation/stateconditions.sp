@@ -1,20 +1,17 @@
 bool IsPlayerTeleported(int client)
 {
-	static float gF_prevOrigin[MAXPLAYERS + 1][3];
-	
 	float origin[3];
 	float velocity[3];
+	float expectedOrigin[2];
+	float difference[2];
+	
 	GetClientAbsOrigin(client, origin);
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 	
-	float expectedOrigin[2];
 	expectedOrigin[0] = gF_prevOrigin[client][0] + velocity[0] * GetTickInterval();
 	expectedOrigin[1] = gF_prevOrigin[client][1] + velocity[1] * GetTickInterval();
-
-	float difference[3];
 	difference[0] = FloatAbs(origin[0] - expectedOrigin[0]);
 	difference[1] = FloatAbs(origin[1] - expectedOrigin[1]);
-	
 	
 	gF_prevOrigin[client] = origin;
 	
@@ -36,9 +33,9 @@ bool IsPlayerInWater(int client)
 	return GetEntProp(client, Prop_Data, "m_nWaterLevel") != 0;
 }
 
-bool WasPlayerPrevStateValid(state prevState)
+bool WasPlayerPrevStateValid(int client)
 {
-	return (prevState == PRE) || (prevState == AIR) || (prevState == LANDED);
+	return (gState_State[client] == PRE) || (gState_State[client] == AIR) || (gState_State[client] == LANDED);
 }
 
 bool IsPlayerOnGround(int client)
@@ -46,9 +43,9 @@ bool IsPlayerOnGround(int client)
 	return view_as<bool>(GetEntityFlags(client) & FL_ONGROUND);
 }
 
-bool WasPlayerInAir(state prevState)
+bool WasPlayerInAir(int client)
 {
-	return prevState == AIR;
+	return gState_State[client] == AIR;
 }
 
 bool IsAirMaxTickCountReached(int client)
@@ -56,7 +53,7 @@ bool IsAirMaxTickCountReached(int client)
 	return MAX_AIR_TICKCOUNT < gI_AitTickCount[client];
 }
 
-bool WasPlayerPrevStateValidForAirState(state prevState)
+bool WasPlayerPrevStateValidForAirState(int client)
 {
-	return (prevState == PRE) || (prevState == AIR);
+	return (gState_State[client] == PRE) || (gState_State[client] == AIR);
 }

@@ -1,20 +1,29 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <clientprefs>
+
+#include <movementapi>
 
 #pragma newdecls required
 #pragma semicolon 1
 
 #include "lj_animation/constants.sp"
+#include "lj_animation/globals.sp"
+#include "lj_animation/cookies.sp"
 
-bool gB_IsMovementApiLibraryExist = false;
-int gI_BeamModel;
-int gI_IsLJAEnabled[MAXPLAYERS + 1];
-int gI_SortedJumpData[MAXPLAYERS + 1][MAX_TRACKING_TICKCOUNT][10];
-
-#include "lj_animation/sqlite.sp"
 #include "lj_animation/commands.sp"
+#include "lj_animation/animation.sp"
+
 #include "lj_animation/statemachine.sp"
+#include "lj_animation/state.sp"
+
+#include "lj_animation/statetransition.sp"
+#include "lj_animation/stateconditions.sp"
+
+#include "lj_animation/statetransitionpost.sp"
+#include "lj_animation/jumpdata.sp"
+#include "lj_animation/jumpdatavalidate.sp"
 
 
 public Plugin myinfo =
@@ -29,8 +38,18 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	gB_IsMovementApiLibraryExist = LibraryExists("movementapi");
+	
 	RegisterCommands();
-	SetupDatabase();
+	
+	RegisterCookies();
+	
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		if(AreClientCookiesCached(client))
+		{
+			OnClientCookiesCached(client);
+		}
+	}
 }
 
 public void OnMapStart()
@@ -40,11 +59,12 @@ public void OnMapStart()
 
 public void OnPluginEnd()
 {
-	for (int client = 1; client <= MaxClients; client++)
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		if (IsClientInGame(client))
+		if(IsClientInGame(client)
+			&& AreClientCookiesCached(client))
 		{
-			SaveIsLJAEnabled(client);
+			SaveLJACookie(client);
 		}
 	}
 }
@@ -56,7 +76,7 @@ public void OnAllPluginsLoaded()
  
 public void OnLibraryRemoved(const char[] name)
 {
-    if (StrEqual(name, "movementapi"))
+    if(StrEqual(name, "movementapi"))
     {
         gB_IsMovementApiLibraryExist = false;
     }
@@ -64,51 +84,40 @@ public void OnLibraryRemoved(const char[] name)
  
 public void OnLibraryAdded(const char[] name)
 {
-    if (StrEqual(name, "movementapi"))
+    if(StrEqual(name, "movementapi"))
     {
         gB_IsMovementApiLibraryExist = true;
     }
 }
 
-public void OnClientConnected(int client)
+public void OnClientCookiesCached(int client)
 {
-	if (IsFakeClient(client))
+	if (!IsFakeClient(client))
 	{
-		return;
+		LoadLJACookie(client);
 	}
-	
-	gB_IsLJAEnabledLoaded[client] = false;
-}
-
-public void OnClientAuthorized(int client, const char[] auth)
-{
-	if (IsFakeClient(client))
-	{
-		return;
-	}
-
-	LoadIsLJAEnabled(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-	if (IsFakeClient(client))
+	if(!IsFakeClient(client))
 	{
-		return;
+		ResetAnimation(client);
+	
+		if(AreClientCookiesCached(client))
+		{
+			SaveLJACookie(client);
+		}
+		
+		gI_IsLJAEnabled[client] = 0;
 	}
-	
-	ResetAnimation(client);
-	
-	SaveIsLJAEnabled(client);
 }
 
 public void OnPlayerRunCmdPost(int client, int buttons, int impulse,
 		const float vel[3], const float angles[3], int weapon, int subtype,
 		int cmdnum, int tickcount, int seed, const int mouse[2])
 {
-	if(gB_IsMovementApiLibraryExist
-		&& gB_IsLJAEnabledLoaded[client]
-		&& gI_IsLJAEnabled[client] == 1)
+	if(gB_IsMovementApiLibraryExist && gI_IsLJAEnabled[client] == 1)
 	{
 		RunStateMachine(client);
 	}
