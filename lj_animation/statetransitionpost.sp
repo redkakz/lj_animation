@@ -1,8 +1,6 @@
-#include "lj_animation/jumpdata.sp"
-
-void StateTransitionPost(int client, state newState)
+void StateTransitionPost(int client)
 {
-	switch(newState)
+	switch(gState_State[client])
 	{
 		case DEFAULT:
 		{
@@ -10,16 +8,16 @@ void StateTransitionPost(int client, state newState)
 		}
 		case PRE:
 		{
-			SetTickInJumpData(client, newState);
+			SetTickInJumpData(client);
 		}
 		case AIR:
 		{
 			IncrementAirTickCount(client);
-			SetTickInJumpData(client, newState);
+			SetTickInJumpData(client);
 		}
 		case LANDED:
 		{
-			SetTickInJumpData(client, newState);
+			SetTickInJumpData(client);
 			
 			CorrectLandOrigin(client);
 			ProcessJumpData(client);

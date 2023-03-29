@@ -1,17 +1,18 @@
-bool IsJumpValid(int client, int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataPosition)
+bool IsJumpValid(int client)
 {
-	int takeoffDataPosition = TakeoffDataPosition(jumpData, dataPosition);
-	
 	int takeoffOrigin[3];
 	int landOrigin[3];
-	takeoffOrigin[0] = jumpData[takeoffDataPosition][4];
-	takeoffOrigin[1] = jumpData[takeoffDataPosition][5];
-	takeoffOrigin[2] = jumpData[takeoffDataPosition][6];
-	landOrigin[0] = jumpData[dataPosition][4];
-	landOrigin[1] = jumpData[dataPosition][5];
-	landOrigin[2] = jumpData[dataPosition][6];
+	
+	int takeoffDataPosition = TakeoffDataPosition(client);
+	
+	takeoffOrigin[0] = gI_JumpData[client][takeoffDataPosition][4];
+	takeoffOrigin[1] = gI_JumpData[client][takeoffDataPosition][5];
+	takeoffOrigin[2] = gI_JumpData[client][takeoffDataPosition][6];
+	landOrigin[0] = gI_JumpData[client][gI_DataInsertPosition[client]][4];
+	landOrigin[1] = gI_JumpData[client][gI_DataInsertPosition[client]][5];
+	landOrigin[2] = gI_JumpData[client][gI_DataInsertPosition[client]][6];
 
-	if(!IsJumpPreSpeedValid(jumpData, takeoffDataPosition))
+	if(!IsJumpPreSpeedValid(client, takeoffDataPosition))
 	{
 		return false;
 	}
@@ -21,7 +22,7 @@ bool IsJumpValid(int client, int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataP
 		return false;
 	}
 	
-	if(!IsJumpMinPreTickCountValid(jumpData))
+	if(!IsJumpMinPreTickCountValid(client))
 	{
 		return false;
 	}
@@ -34,19 +35,20 @@ bool IsJumpValid(int client, int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataP
 	return true;
 }
 
-int TakeoffDataPosition(int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataPosition)
+int TakeoffDataPosition(int client)
 {
-	int takeoffDataPosition = dataPosition;
+	int takeoffDataPosition = gI_DataInsertPosition[client];
 	
 	for(int i = 0; i < MAX_TRACKING_TICKCOUNT; i++)
 	{
 		takeoffDataPosition--;
+		
 		if(takeoffDataPosition < 0)
 		{
 			takeoffDataPosition += MAX_TRACKING_TICKCOUNT;
 		}
 		
-		if(jumpData[takeoffDataPosition][0] == view_as<int>(PRE))
+		if(gI_JumpData[client][takeoffDataPosition][0] == view_as<int>(PRE))
 		{
 			break;
 		}
@@ -55,10 +57,10 @@ int TakeoffDataPosition(int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataPositi
 	return takeoffDataPosition;
 }
 
-bool IsJumpPreSpeedValid(int jumpData[MAX_TRACKING_TICKCOUNT][10], int dataPosition)
+bool IsJumpPreSpeedValid(int client, int dataPosition)
 {
-	float preSpeed = SquareRoot(Pow(IntToFloatWithPrecision(jumpData[dataPosition][7]), 2.0)
-									+ Pow(IntToFloatWithPrecision(jumpData[dataPosition][8]), 2.0));
+	float preSpeed = SquareRoot(Pow(IntToFloatWithPrecision(gI_JumpData[client][dataPosition][7]), 2.0)
+									+ Pow(IntToFloatWithPrecision(gI_JumpData[client][dataPosition][8]), 2.0));
 	
 	return preSpeed < MAX_JUMP_PRESPEED;
 }
@@ -70,12 +72,13 @@ bool IsJumpOffsetValid(int start, int end)
 	return jumpOffset < Z_OFFSET_TOLERANCE;
 }
 
-bool IsJumpMinPreTickCountValid(int jumpData[MAX_TRACKING_TICKCOUNT][10])
+bool IsJumpMinPreTickCountValid(int client)
 {
 	int totalPreTicks;
-	for (int i = 0; i < MAX_TRACKING_TICKCOUNT; i++)
+	
+	for(int i = 0; i < MAX_TRACKING_TICKCOUNT; i++)
 	{
-		if(jumpData[i][0] == view_as<int>(PRE))
+		if(gI_JumpData[client][i][0] == view_as<int>(PRE))
 		{
 			totalPreTicks++;
 		}

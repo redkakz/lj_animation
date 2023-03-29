@@ -1,12 +1,4 @@
-#include <movementapi>
-
-int gI_DataInsertPosition[MAXPLAYERS + 1] = {-1, ...};
-int gI_JumpData[MAXPLAYERS + 1][MAX_TRACKING_TICKCOUNT][10];
-int gI_Distance[MAXPLAYERS + 1];
-
-#include "lj_animation/jumpdatavalidate.sp"
-
-void SetTickInJumpData(int client, state tickState)
+void SetTickInJumpData(int client)
 {
 	gI_DataInsertPosition[client] = IncrementPosition(gI_DataInsertPosition[client]);
 	
@@ -18,7 +10,7 @@ void SetTickInJumpData(int client, state tickState)
 	GetClientAbsOrigin(client, origin);
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 	
-	gI_JumpData[client][gI_DataInsertPosition[client]][0] = tickState;
+	gI_JumpData[client][gI_DataInsertPosition[client]][0] = gState_State[client];
 	gI_JumpData[client][gI_DataInsertPosition[client]][1] = GetClientButtons(client);
 	gI_JumpData[client][gI_DataInsertPosition[client]][2] = RoundToNearest(eyeAngles[0] * FLOAT_PRECISION);
 	gI_JumpData[client][gI_DataInsertPosition[client]][3] = RoundToNearest(eyeAngles[1] * FLOAT_PRECISION);
@@ -58,7 +50,7 @@ void CorrectLandOrigin(int client)
 
 void ProcessJumpData(int client)
 {
-	if(!IsJumpValid(client, gI_JumpData[client], gI_DataInsertPosition[client]))
+	if(!IsJumpValid(client))
 	{
 		return;
 	}
@@ -88,9 +80,9 @@ void SortJumpData(int client)
 			gI_SortedJumpData[client][sortedPosition][2] = gI_JumpData[client][dataPosition][2];
 			gI_SortedJumpData[client][sortedPosition][3] = gI_JumpData[client][dataPosition][3];
 			gI_SortedJumpData[client][sortedPosition][4] = gI_JumpData[client][dataPosition][4]
-															- gI_JumpData[client][dataPosition][7] / 128;
+															- gI_JumpData[client][dataPosition][7] / RoundFloat(1 / GetTickInterval());
 			gI_SortedJumpData[client][sortedPosition][5] = gI_JumpData[client][dataPosition][5]
-															- gI_JumpData[client][dataPosition][8] / 128;
+															- gI_JumpData[client][dataPosition][8] / RoundFloat(1 / GetTickInterval());
 			gI_SortedJumpData[client][sortedPosition][6] = gI_JumpData[client][dataPosition][6];
 			gI_SortedJumpData[client][sortedPosition][7] = 0;
 			gI_SortedJumpData[client][sortedPosition][8] = 0;

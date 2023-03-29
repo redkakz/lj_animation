@@ -1,10 +1,3 @@
-bool gI_IsVisible[MAXPLAYERS + 1];
-Handle gH_PositionLinesTimer[MAXPLAYERS + 1];
-Handle gH_AnimatedLinesTimer[MAXPLAYERS + 1];
-bool gB_IsAnimationPlaying[MAXPLAYERS + 1];
-int gI_CurrentAnimationPosition[MAXPLAYERS + 1] = {1,...};
-Handle gH_PlayAnimationTimer[MAXPLAYERS + 1];
-
 int AnimationMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	switch(action)
@@ -17,7 +10,7 @@ int AnimationMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 			{
 				case 0:
 				{
-					gI_IsVisible[client] = !gI_IsVisible[client];
+					gB_IsVisible[client] = !gB_IsVisible[client];
 				}
 				case 1:
 				{
@@ -42,21 +35,12 @@ int AnimationMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 				}
     		}
     		
-			delete gH_PositionLinesTimer[client];
-			delete gH_AnimatedLinesTimer[client];
-			delete gH_PlayAnimationTimer[client];
+			delete gH_RedrawTimer[client];
 	
-			if(gI_IsVisible[client])
+			if(gB_IsVisible[client])
 			{
-				gH_PositionLinesTimer[client]
-					= CreateTimer(0.4, DrawPositionLinesTimer, GetClientUserId(client), TIMER_REPEAT);
-				gH_AnimatedLinesTimer[client]
-					= CreateTimer(0.4, DrawAnimatedLinesTimer, GetClientUserId(client), TIMER_REPEAT);
-				if(gB_IsAnimationPlaying[client])
-				{
-					gH_PlayAnimationTimer[client]
-						= CreateTimer(0.4, AnimationTimer, GetClientUserId(client), TIMER_REPEAT);
-				}
+				gH_RedrawTimer[client]
+					= CreateTimer(0.4, AnimationTimer, GetClientUserId(client), TIMER_REPEAT);
 			}
 			
 			CreateAnimationMenu(client);
@@ -66,34 +50,29 @@ int AnimationMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 			delete menu;
 		}
 	}
-}
-
-Action DrawPositionLinesTimer(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	DrawPositionLines(client);
-
-	return Plugin_Continue;
-}
-
-Action DrawAnimatedLinesTimer(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	if((gI_CurrentAnimationPosition[client] + 1) !=MAX_TRACKING_TICKCOUNT)
-	{
-		DrawAnimatedLines(client);
-	}
-
-	return Plugin_Continue;
+	
+	return 0;
 }
 
 Action AnimationTimer(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
-	gI_CurrentAnimationPosition[client]
-		= (MAX_TRACKING_TICKCOUNT - 2) < (gI_CurrentAnimationPosition[client] + 1)
-		? 1 : gI_CurrentAnimationPosition[client] + 1;
-	DrawAnimatedLines(client);
+	
+	DrawPositionLines(client);
+	
+	if((gI_CurrentAnimationPosition[client] + 1) !=MAX_TRACKING_TICKCOUNT)
+	{
+		DrawAnimatedLines(client);
+		
+		if(gB_IsAnimationPlaying[client])
+		{
+			gI_CurrentAnimationPosition[client]
+				= (MAX_TRACKING_TICKCOUNT - 2) < (gI_CurrentAnimationPosition[client] + 1)
+				? 1 : gI_CurrentAnimationPosition[client] + 1;
+				
+			DrawAnimatedLines(client);
+		}
+	}
 
 	return Plugin_Continue;
 }
@@ -115,7 +94,7 @@ void DrawPositionLines(int client)
 		end[0] = float(gI_SortedJumpData[client][i+1][4]) / FLOAT_PRECISION;
 		end[1] = float(gI_SortedJumpData[client][i+1][5]) / FLOAT_PRECISION;
 		
-		TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.38, 0.2, 0.2, 0, 0.0, color, 0);
+		TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.4, 0.2, 0.2, 0, 0.0, color, 0);
 		TE_SendToAll();
 	}
 }
@@ -123,48 +102,54 @@ void DrawPositionLines(int client)
 void DrawAnimatedLines(int client)
 {
 	float start[3];
+	float temp[3];
 	float end[3];
-	float eyeNormals[2];
+	
+	float eyeAngle;
+	
+	int buttons;
+	int buttonForward;
+	int buttonBack;
+	int buttonLeft;
+	int buttonRight;
+	int numberOfButtonsPressed;
+	int buttonEndArray[4][2];
+	int buttonEndArrayLength;
 	
 	// velocity
-	float diff[2];
 	start[0] = float(gI_SortedJumpData[client][gI_CurrentAnimationPosition[client]][4]) / FLOAT_PRECISION;
 	start[1] = float(gI_SortedJumpData[client][gI_CurrentAnimationPosition[client]][5]) / FLOAT_PRECISION;
 	start[2] = float(gI_SortedJumpData[client][0][6]) / FLOAT_PRECISION + 1.01;
-	diff[0] = start[0] + float(gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] - 1 < 0)
+	temp[0] = start[0] + float(gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] - 1 < 0)
 									? 0 : (gI_CurrentAnimationPosition[client] - 1)][4]) / FLOAT_PRECISION * -1;
-	diff[1] = start[1] + float(gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] - 1 < 0)
+	temp[1] = start[1] + float(gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] - 1 < 0)
 									? 0 : (gI_CurrentAnimationPosition[client] - 1)][5]) / FLOAT_PRECISION * -1;							
-	end[0] = start[0] + diff[0] * 40;
-	end[1] = start[1] + diff[1] * 40;
+	end[0] = start[0] + temp[0] * 40;
+	end[1] = start[1] + temp[1] * 40;
 	end[2] = float(gI_SortedJumpData[client][0][6]) / FLOAT_PRECISION + 1.01;
 		
-	TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.38, 0.2, 0.2, 0, 0.0, ANIMATION_VEL_LINE_COLOR, 0);
+	TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.4, 0.2, 0.2, 0, 0.0, ANIMATION_VEL_LINE_COLOR, 0);
 	TE_SendToAll();
 	
 	// eye
-	float eyeAngle
-		= float(gI_SortedJumpData[client][gI_CurrentAnimationPosition[client] + 1][3]) / FLOAT_PRECISION;
+	eyeAngle = float(gI_SortedJumpData[client][gI_CurrentAnimationPosition[client] + 1][3]) / FLOAT_PRECISION;
 		
-	eyeNormals[0] = Cosine(eyeAngle * (PI / 180));
-	eyeNormals[1] = Sine(eyeAngle * (PI / 180));
-	end[0] = start[0] + eyeNormals[0] * 80;
-	end[1] = start[1] + eyeNormals[1] * 80;
+	temp[0] = Cosine(eyeAngle * (PI / 180));
+	temp[1] = Sine(eyeAngle * (PI / 180));
+	end[0] = start[0] + temp[0] * 80;
+	end[1] = start[1] + temp[1] * 80;
 		
-	TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.38, 0.2, 0.2, 0, 0.0, ANIMATION_EYE_LINE_COLOR, 0);
+	TE_SetupBeamPoints(start, end, gI_BeamModel, 0, 0, 0, 0.4, 0.2, 0.2, 0, 0.0, ANIMATION_EYE_LINE_COLOR, 0);
 	TE_SendToAll();
 	
 	// buttons
-	int buttons = gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] + 1)][1];
-	int buttonForward = buttons & IN_FORWARD == 0 ? 0 : 1;
-	int buttonBack = buttons & IN_BACK == 0 ? 0 : 1;
-	int buttonLeft = buttons & IN_MOVELEFT == 0 ? 0 : 1;
-	int buttonRight = buttons & IN_MOVERIGHT == 0 ? 0 : 1;
+	buttons = gI_SortedJumpData[client][(gI_CurrentAnimationPosition[client] + 1)][1];
+	buttonForward = buttons & IN_FORWARD == 0 ? 0 : 1;
+	buttonBack = buttons & IN_BACK == 0 ? 0 : 1;
+	buttonLeft = buttons & IN_MOVELEFT == 0 ? 0 : 1;
+	buttonRight = buttons & IN_MOVERIGHT == 0 ? 0 : 1;
 	
-	int numberOfButtonsPressed = buttonForward + buttonBack + buttonLeft + buttonRight;
-    
-	int buttonEndArray[4][2];
-	int buttonEndArrayLength;
+	numberOfButtonsPressed = buttonForward + buttonBack + buttonLeft + buttonRight;
 
 	switch(numberOfButtonsPressed)
 	{
@@ -262,8 +247,8 @@ void DrawAnimatedLines(int client)
 		float buttonEndRotated[2];
 		float buttonEnd[3];
 
-		buttonEndRotated[0] = eyeNormals[0] * buttonEndArray[i][0] - eyeNormals[1] * buttonEndArray[i][1];
-		buttonEndRotated[1] = eyeNormals[1] * buttonEndArray[i][0] + eyeNormals[0] * buttonEndArray[i][1];
+		buttonEndRotated[0] = temp[0] * buttonEndArray[i][0] - temp[1] * buttonEndArray[i][1];
+		buttonEndRotated[1] = temp[1] * buttonEndArray[i][0] + temp[0] * buttonEndArray[i][1];
 		buttonEnd[0] = start[0] + buttonEndRotated[0] * 16;
 		buttonEnd[1] = start[1] + buttonEndRotated[1] * 16;
 		buttonEnd[2] = end[2];
@@ -277,8 +262,8 @@ void CreateAnimationMenu(int client)
 {
 	Menu menu;
 	menu = new Menu(AnimationMenuHandler);
-	menu.SetTitle("Long Jump Animation\nby redka\n%s", LJA_SOURCE_URL);
-	menu.AddItem("1", gI_IsVisible[client] ? "Hide" : "Show");
+	menu.SetTitle("Long Jump Animation %s\n%s", LJA_VERSION, LJA_SOURCE_URL);
+	menu.AddItem("1", gB_IsVisible[client] ? "Hide" : "Show");
 	menu.AddItem("2", gB_IsAnimationPlaying[client] ? "Pause" : "Play");
 	menu.AddItem("2", "Stop");
 	menu.AddItem("4", "Step forward");
@@ -289,11 +274,9 @@ void CreateAnimationMenu(int client)
 
 void ResetAnimation(int client)
 {
-	delete gH_PositionLinesTimer[client];
-	delete gH_AnimatedLinesTimer[client];
-	delete gH_PlayAnimationTimer[client];
+	delete gH_RedrawTimer[client];
 	
-	gI_IsVisible[client] = false;
+	gB_IsVisible[client] = false;
 	gB_IsAnimationPlaying[client] = false;
 	gI_CurrentAnimationPosition[client] = 1;
 	
